@@ -3,27 +3,37 @@ module RateLimit
 	REQUEST_LIMIT = 100
 	BLOCKED_EXPIRY_TIME = 60
 
-	def reach_max_request?(key)
-		# check if this key is a blocked key
-		if $redis.get("blocked_#{key}")
-			seconds_left = $redis.ttl("blocked_#{key}")
+	def reach_max_request?(ip)
+		blocked_key = "blocked_#{ip}"
+		counting_key = "counting_#{ip}"
+
+		# check if there is a blocked key with this ip
+
+		if $redis.get(blocked_key)
+			seconds_left = $redis.ttl(blocked_key)
 			return seconds_left
 		end		
+		
+		# check if there is a counting key with this ip
 
-		# get and increase the value for the key
-		# if the key doesn't exist, the value will be set as 1
-		request_count = $redis.incr("counting_#{key}")
+		if $redis.get(counting_key)
+			request_count = $redis.incr(counting_key)
 
-		# check if the request count is greater than the limit
-		if request_count > REQUEST_LIMIT
-			$redis.setex("blocked_#{key}", BLOCKED_EXPIRY_TIME, true)
-			$redis.del("counting_#{key}")
+			if request_count.to_i > REQUEST_LIMIT
+				$redis.set(blocked_key, true)
+				$redis.expire(blocked_key, BLOCKED_EXPIRY_TIME)
 
-			seconds_left = $redis.ttl("blocked_#{key}")
-			return seconds_left
+				$redis.del(counting_key)
+				seconds_left = $redis.ttl(blocked_key)
+				return seconds_left
+			end
+
+		# if no key exists, create a new one with expiry time
 		else
-			$redis.expire("counting_#{key}", COUNTING_EXPIRY_TIME)
+			$redis.set(counting_key, 1)
+			$redis.expire(counting_key, COUNTING_EXPIRY_TIME)
 		end
+
 		return false
 	end
 end

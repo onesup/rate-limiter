@@ -21,7 +21,7 @@ RSpec.describe Api::V1::UsersController do
     before do
       $redis.del('counting_1.2.3.4')
       $redis.del('blocked_1.2.3.4')
-      get '/api/v1/users', xhr: true
+      get '/api/v1/users'
     end
     
     it "returns http success" do
@@ -39,7 +39,7 @@ RSpec.describe Api::V1::UsersController do
   end
 
 
-  describe "GET #index less or equal to 100 times in 60 minutes" do
+  describe "GET #index less than or equal to 100 times in 60 minutes" do
     before do      
       100.times do 
         get '/api/v1/users'
@@ -60,6 +60,45 @@ RSpec.describe Api::V1::UsersController do
     
     it "returns http too_many_requests" do
       expect(response).to have_http_status(:too_many_requests)
+    end   
+  end
+
+  describe "GET #index more than 100 times and wait for a counting key to be expired and then make another request" do
+    before do
+      # stub as 10 seconds because 3600 seconds is too long
+      stub_const("RateLimit::COUNTING_EXPIRY_TIME", 5)
+      puts "Please wait for 5 seconds....."
+      
+      100.times do 
+        get '/api/v1/users'
+      end
+      
+      sleep 5
+      get '/api/v1/users'
+    end
+    
+    it "returns http success" do
+      expect(response).to have_http_status(:success)
+    end   
+  end
+
+
+  describe "GET #index more than 101 times and wait for a blocked key to be expired and then make another request" do
+    before do
+      # stub as 10 seconds because 3600 seconds is too long
+      stub_const("RateLimit::BLOCKED_EXPIRY_TIME", 5)
+      puts "Please wait for 5 seconds....."
+      
+      101.times do 
+        get '/api/v1/users'
+      end
+      
+      sleep 5
+      get '/api/v1/users'
+    end
+    
+    it "returns http success" do
+      expect(response).to have_http_status(:success)
     end   
   end
 end
