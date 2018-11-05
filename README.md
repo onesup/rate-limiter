@@ -1,5 +1,5 @@
 ## Requirements
-    * [Redis](https://redis.io/topics/quickstart)
+  * [Redis](https://redis.io/topics/quickstart)
 
 ## Installation
 
