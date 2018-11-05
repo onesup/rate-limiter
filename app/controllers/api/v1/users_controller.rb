@@ -5,7 +5,7 @@ module Api
       def index
         users = User.all
       	if res = reach_max_request?(request.remote_ip)
-        	render json: { message: "You have fired too many requests. Please wait for #{res} seconds", status: 429	}
+        	render json: { message: "Rate limit exceeded. Try again in #{res} seconds" }, status: :too_many_requests
         else
         	render json: users, status: :ok
         end

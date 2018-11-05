@@ -1,7 +1,7 @@
 module RateLimit
-	COUNTING_EXPIRY_TIME = 30
-	COUNT_LIMIT = 5
-	BLOCKED_EXPIRY_TIME = 30
+	COUNTING_EXPIRY_TIME = 3600
+	REQUEST_LIMIT = 100
+	BLOCKED_EXPIRY_TIME = 60
 
 	def reach_max_request?(key)
 		# check if this key is a blocked key
@@ -15,7 +15,7 @@ module RateLimit
 		request_count = $redis.incr("counting_#{key}")
 
 		# check if the request count is greater than the limit
-		if request_count > COUNT_LIMIT
+		if request_count > REQUEST_LIMIT
 			$redis.setex("blocked_#{key}", BLOCKED_EXPIRY_TIME, true)
 			$redis.del("counting_#{key}")
 
