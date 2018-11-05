@@ -1,36 +1,26 @@
 require 'rails_helper'
 
-# RSpec.describe 'API V1 products index', type: :api do
-#   before do
-#     5.times do |i|
-#       User.create(name: "test_#{i}", email:"test_#{i}@gmail.com")
-#     end
-#   end
-
-#   it 'returns all users with status code ok' do 
-#     expect()
-#   it { is_expected.to have_http_status(:ok) }
-# end
-
-
 RSpec.describe Api::V1::UsersController do
   before do
     5.times do |i|
       User.create(name: "test_#{i}", email:"test_#{i}@gmail.com")
     end
-    $redis.del('counting_127.0.0.1')
-    $redis.del('blocked_127.0.0.1')
+
+    allow_any_instance_of(ActionDispatch::Request).to receive(:remote_ip) { '1.2.3.4' }
+
+    $redis.del('counting_1.2.3.4')
+    $redis.del('blocked_1.2.3.4')
   end
 
   after do
-    $redis.del('counting_127.0.0.1')
-    $redis.del('blocked_127.0.0.1')
+    $redis.del('counting_1.2.3.4')
+    $redis.del('blocked_1.2.3.4')
   end
   
   describe "GET #index" do
     before do
-      $redis.del('counting_127.0.0.1')
-      $redis.del('blocked_127.0.0.1')
+      $redis.del('counting_1.2.3.4')
+      $redis.del('blocked_1.2.3.4')
       get '/api/v1/users', xhr: true
     end
     
