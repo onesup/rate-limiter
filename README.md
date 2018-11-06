@@ -11,8 +11,12 @@ $ cd rate-limiter
 $ bundle install
 ```
 
+```sh
+$ rails db:create && rails db:migrate && rails db:seed
+```
 
-## Start the server
+
+## Start
 
 ```sh
 $ foreman start
